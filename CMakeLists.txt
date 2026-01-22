@@ -9,5 +9,7 @@ link_directories(/opt/homebrew/lib)
 find_package(MPI REQUIRED)
 
 add_executable(mpi_exec prefix_sum_sendrecv.c)
-
 target_link_libraries(mpi_exec MPI::MPI_C)
+
+add_executable(matmul matmul_mpi.c matrix.c)
+target_link_libraries(matmul MPI::MPI_C)
