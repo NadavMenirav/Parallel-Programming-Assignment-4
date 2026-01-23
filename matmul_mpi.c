@@ -40,9 +40,18 @@ int main(int argc, char **argv) {
     IMatrix A = imatrix_alloc(N);
     IMatrix B = imatrix_alloc(N);
 
-    // Filling the matrices with random values
-    imatrix_fill_random(&A, seedA, maxValue);
-    imatrix_fill_random(&B, seedB, maxValue);
+    // Filling the matrices with random values - only for rank = 0
+    if (rank == 0) {
+        imatrix_fill_random(&A, seedA, maxValue);
+        imatrix_fill_random(&B, seedB, maxValue);
+    }
+
+    /*
+     * Broadcasting B matrix to everyone.
+     * Since Imatrix is not a valid MPI type - we only pass the values in 'data'
+     */
+    MPI_Bcast(B.data, N * N, MPI_INT, 0, MPI_COMM_WORLD);
+
 
     // Closing the MPI
     MPI_Finalize();
