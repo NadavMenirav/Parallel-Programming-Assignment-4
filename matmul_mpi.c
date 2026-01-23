@@ -76,12 +76,12 @@ int main(int argc, char **argv) {
             displs[i] = N * first_row;
 
             // Calculating the number of rows each process gets
-            sendCounts[i] = get_rows_for_rank(i, N, size);
+            sendCounts[i] = get_rows_for_rank(i, N, size) * N;
         }
     }
 
     // Now calculating locally for each process the number of integers he receives so it can allocate its memory
-    const int number_of_integers = get_rows_for_rank(rank, N, size);
+    const int number_of_integers = get_rows_for_rank(rank, N, size) * N;
 
 
 
@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
 // r - rank, N - dimension of the space of the matrix, P - number of processes
 int get_rows_for_rank(const int r, const int N, const int P) {
     const int first_row = r * N / P;
-    const int last_row = (r + 1) * N / P;
+    const int last_row = (r + 1) * N / P - 1;
     const int row_count = last_row - first_row + 1;
-    return row_count * N;
+    return row_count;
 }
