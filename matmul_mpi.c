@@ -4,8 +4,8 @@
 #include "matrix.h"
 
 /*
-* This main function calculates a parallel matrix multiplication.
-*/
+ * This main function calculates a parallel matrix multiplication using 1D Row-Block Distribution
+ */
 int main(int argc, char **argv) {
 
     // 4 arguments + program name
@@ -53,7 +53,38 @@ int main(int argc, char **argv) {
     MPI_Bcast(B.data, N * N, MPI_INT, 0, MPI_COMM_WORLD);
 
 
+    // Parameters for the scatterv function that is used to send the different rows of A
+
+    // Allocating the sendcounts and displs arrays
+    int* sendCounts = calloc(size, sizeof(int));
+    int* displs = calloc(size, sizeof(int));
+
+    /*
+     * Process 0 calculates the number of elements to send to each process using the provided formula.
+     * Also calculates the first row each process gets
+     */
+    if (rank == 0) {
+        for (int i = 0; i < size; i++) {
+
+            // Using the provided formula to calculate the first row for each process
+            const int first_row = i * N / size;
+
+            // The first integer in the row is at index row_number * N
+            displs[i] = N * first_row;
+
+            // Calculating the number of rows each process gets
+            const int last_row = (i + 1) * N / size - 1;
+            const int row_count = last_row - first_row + 1;
+
+            // The number of elements each process gets is row_count times the number of elements in each row (N)
+            sendCounts[i] = row_count * N;
+        }
+    }
+
     // Closing the MPI
     MPI_Finalize();
+
+    free(sendCounts);
+    free(displs);
     return 0;
 }
