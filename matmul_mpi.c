@@ -99,12 +99,16 @@ int main(int argc, char **argv) {
         MPI_INT, 0, MPI_COMM_WORLD);
 
 
-    // Closing the MPI
-    MPI_Finalize();
+    // Freeing the memory
+    imatrix_free(&B);
 
     free(sendCounts);
     free(displs);
     free(sendBuffer);
+    free(receiveBuffer);
+
+    // Closing the MPI
+    MPI_Finalize();
     return 0;
 }
 
