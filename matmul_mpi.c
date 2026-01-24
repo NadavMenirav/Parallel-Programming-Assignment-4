@@ -93,6 +93,7 @@ int main(int argc, char **argv) {
 
     // Now calculating locally for each process the number of integers he receives so it can allocate its memory
     const int number_of_integers = get_rows_for_rank(rank, N, size) * N;
+    const int row_count = get_rows_for_rank(rank, N, size);
 
     // Allocate the receiveBuffer
     int* receiveBuffer = malloc(number_of_integers * sizeof(int));
@@ -102,8 +103,22 @@ int main(int argc, char **argv) {
         MPI_INT, 0, MPI_COMM_WORLD);
 
     // Calculating the multiplication
+    int* localC = matrix_calc(receiveBuffer, B.data, row_count, N, N, N);
 
+    /*
+     * Now we need to send to the root the matrix. Just like in the scatterv, we declare a receiveBuffer (the C matrix)
+     * which is NULL for all other processes
+     */
+    int* resultBuffer = NULL;
 
+    // Allocate the memory for the resultBuffer for the root
+    if (rank == 0) {
+        resultBuffer = malloc(N * N * sizeof(int));
+    }
+
+    // Sending the data
+    MPI_Gatherv(localC, number_of_integers, MPI_INT, resultBuffer, sendCounts, displs,
+        MPI_INT, 0, MPI_COMM_WORLD);
 
     // Freeing the memory
     imatrix_free(&B);
@@ -112,6 +127,8 @@ int main(int argc, char **argv) {
     free(displs);
     free(sendBuffer);
     free(receiveBuffer);
+    free(localC);
+    free(resultBuffer);
 
     // Closing the MPI
     MPI_Finalize();
