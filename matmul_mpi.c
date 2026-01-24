@@ -39,12 +39,20 @@ int main(int argc, char **argv) {
     const int seedB = atoi(seedB_char);
     const int maxValue = atoi(maxValue_char);
 
-    // Allocating the memory for the matrices
-    IMatrix A = imatrix_alloc(N);
+    // Allocating the memory for the matrix B
     IMatrix B = imatrix_alloc(N);
+
+    // Declaring the sendBuffer pointer. for rank = 0 it will be A.data and for everyone else it is NULL
+    int* sendBuffer = NULL;
 
     // Filling the matrices with random values - only for rank = 0
     if (rank == 0) {
+
+        // Only rank 0 has the entire matrix
+        IMatrix A = imatrix_alloc(N);
+        sendBuffer = A.data;
+
+        // Randomizing
         imatrix_fill_random(&A, seedA, maxValue);
         imatrix_fill_random(&B, seedB, maxValue);
     }
@@ -83,6 +91,12 @@ int main(int argc, char **argv) {
     // Now calculating locally for each process the number of integers he receives so it can allocate its memory
     const int number_of_integers = get_rows_for_rank(rank, N, size) * N;
 
+    // Allocate the receiveBuffer
+    int* receiveBuffer = malloc(number_of_integers * sizeof(int));
+
+    // Sending the data
+    MPI_Scatterv(sendBuffer, sendCounts, displs, MPI_INT, receiveBuffer, number_of_integers,
+        MPI_INT, 0, MPI_COMM_WORLD);
 
 
     // Closing the MPI
@@ -90,6 +104,7 @@ int main(int argc, char **argv) {
 
     free(sendCounts);
     free(displs);
+    free(sendBuffer);
     return 0;
 }
 
