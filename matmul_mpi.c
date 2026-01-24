@@ -120,6 +120,19 @@ int main(int argc, char **argv) {
     MPI_Gatherv(localC, number_of_integers, MPI_INT, resultBuffer, sendCounts, displs,
         MPI_INT, 0, MPI_COMM_WORLD);
 
+    // The root process now stores the data in an IMatrix struct
+    if (rank == 0) {
+
+        // Storing the values in the C matrix
+        IMatrix C;
+        C.N = N;
+        C.data = resultBuffer;
+
+        // Printing the sum of C matrix as required
+        printf("checksum(C) = %lld\n", imatrix_checksum(&C));
+    }
+
+
     // Freeing the memory
     imatrix_free(&B);
 
