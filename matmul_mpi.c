@@ -6,6 +6,9 @@
 // Calculates the number of rows each process receives
 int get_rows_for_rank(int r, int N, int P);
 
+// Calculates the matrix multiplication
+int* matrix_calc(const int* A, const int* B, int rowA, int colA, int rowB, int colB);
+
 /*
  * This main function calculates a parallel matrix multiplication using 1D Row-Block Distribution
  */
@@ -98,6 +101,9 @@ int main(int argc, char **argv) {
     MPI_Scatterv(sendBuffer, sendCounts, displs, MPI_INT, receiveBuffer, number_of_integers,
         MPI_INT, 0, MPI_COMM_WORLD);
 
+    // Calculating the multiplication
+
+
 
     // Freeing the memory
     imatrix_free(&B);
@@ -118,4 +124,28 @@ int get_rows_for_rank(const int r, const int N, const int P) {
     const int last_row = (r + 1) * N / P - 1;
     const int row_count = last_row - first_row + 1;
     return row_count;
+}
+
+// Calculating A * B and returning C - the result matrix
+int* matrix_calc(const int* A, const int* B, const int rowA, const int colA, const int rowB, const int colB) {
+
+    // The matrices cannot be multiplied
+    if (colA != rowB) {
+        return NULL;
+    }
+
+    // Allocating the memory for the result matrix. the size is rowA * colB
+    int* C = calloc(rowA * colB, sizeof(int));
+
+    for (int i = 0; i < rowA; i++) {
+        for (int j = 0; j < colB; j++) {
+
+            // for C_[i,j] we need to calculate the scalar product of row i in A and column j in B
+            for (int k = 0; k < colA; k++) {
+                C[i * colB + j] += A[i * colA + k] * B[k * colB + j];
+            }
+        }
+    }
+
+    return C;
 }
